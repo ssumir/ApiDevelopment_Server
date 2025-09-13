@@ -28,12 +28,12 @@
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { HashRouter } from 'react-router-dom' // Import HashRouter
+import { HashRouter } from 'react-router-dom' // <-- Change this line
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <HashRouter> {/* Use HashRouter */}
+    <HashRouter> {/* <-- And this one */}
       <App />
     </HashRouter>
   </StrictMode>
