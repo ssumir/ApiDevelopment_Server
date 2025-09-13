@@ -42,6 +42,49 @@
 
 // export default App;
 
+// First Correction
+// import { Routes, Route } from "react-router-dom";
+// import Register from "./pages/Auth/register";
+// import NotFound from "./pages/NotFound/NotFound";
+// import Login from "./pages/Auth/login";
+// import NotAuthorize from "./utils/notAuthorize";
+// import Dashboard from "./pages/Dashboard/Dashboard";
+// import Authorize from "./utils/authorize";
+// import Home from "./pages/Home/Home";
+// import Courses from './pages/Courses/Courses';
+// import CourseCategories from './pages/CourseCategories/CourseCategories';
+// import Enrollments from './pages/Enrollments/Enrollments';
+// import Users from './pages/Users/Users';
+
+// function App() {
+//   return (
+//     <Routes>
+//       {/* Public Routes */}
+//       <Route path="/" element={<Home />} />
+
+//       {/* Auth Routes - Redirect if already authorized */}
+//       <Route element={<NotAuthorize />}>
+//         <Route path="auth/register" element={<Register />} />
+//         <Route path="auth/login" element={<Login />} />
+//       </Route>
+
+//       {/* Protected Routes - Requires a token */}
+//       <Route element={<Authorize />}>
+//         <Route path="dashboard" element={<Dashboard />} />
+//         <Route path="courses" element={<Courses />} />
+//         <Route path="coursecategories" element={<CourseCategories />} />
+//         <Route path="enrollments" element={<Enrollments />} />
+//         <Route path="users" element={<Users />} />
+//       </Route>
+
+//       {/* Not Found Page */}
+//       <Route path="*" element={<NotFound />} />
+//     </Routes>
+//   );
+// }
+
+// export default App;
+
 import { Routes, Route } from "react-router-dom";
 import Register from "./pages/Auth/register";
 import NotFound from "./pages/NotFound/NotFound";
@@ -61,13 +104,13 @@ function App() {
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
 
-      {/* Auth Routes - Redirect if already authorized */}
+      {/* Auth Routes */}
       <Route element={<NotAuthorize />}>
         <Route path="auth/register" element={<Register />} />
         <Route path="auth/login" element={<Login />} />
       </Route>
 
-      {/* Protected Routes - Requires a token */}
+      {/* Protected Routes */}
       <Route element={<Authorize />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="courses" element={<Courses />} />
@@ -76,10 +119,11 @@ function App() {
         <Route path="users" element={<Users />} />
       </Route>
 
-      {/* Not Found Page */}
+      {/* Not Found */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
 
 export default App;
+
