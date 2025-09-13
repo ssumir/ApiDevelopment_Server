@@ -10,8 +10,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // You should remove the 'base' property for HashRouter
-});
+  // No base property needed
+})
