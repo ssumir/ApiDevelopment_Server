@@ -93,10 +93,6 @@ import NotAuthorize from "./utils/notAuthorize";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Authorize from "./utils/authorize";
 import Home from "./pages/Home/Home";
-import Courses from './pages/Courses/Courses';
-import CourseCategories from './pages/CourseCategories/CourseCategories';
-import Enrollments from './pages/Enrollments/Enrollments';
-import Users from './pages/Users/Users';
 
 function App() {
   return (
@@ -110,13 +106,14 @@ function App() {
         <Route path="auth/login" element={<Login />} />
       </Route>
 
-      {/* Protected Routes */}
+      {/* Protected Dashboard Route */}
       <Route element={<Authorize />}>
+        {/*
+          The Dashboard component itself handles the rendering of
+          Courses, CourseCategories, etc., based on its internal state.
+          So, we only need one protected route for the entire dashboard area.
+        */}
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="courses" element={<Courses />} />
-        <Route path="coursecategories" element={<CourseCategories />} />
-        <Route path="enrollments" element={<Enrollments />} />
-        <Route path="users" element={<Users />} />
       </Route>
 
       {/* Not Found */}
