@@ -21,6 +21,9 @@ import {
     MenuItem,
     Modal,
     TablePagination,
+    Menu,
+    ListItemIcon,
+    ListItemText,
 } from '@mui/material';
 import {
     Edit,
@@ -30,9 +33,13 @@ import {
     ArrowUpward,
     ArrowDownward,
     Visibility,
+    Print,
+    PictureAsPdf,
+    Description,
+    TableChart,
+    MoreVert,
 } from '@mui/icons-material';
 
-// Import the updated EnrollmentFormModal
 import EnrollmentFormModal from './EnrollmentFormModal';
 
 const style = {
@@ -82,13 +89,13 @@ const EnrollmentDetailsModal = ({ open, handleClose, enrollment }) => {
     );
 };
 
-export default function Enrollments() {
+export default function Enrollments({ showNotification, setEnrollmentCount }) {
     const [enrollments, setEnrollments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('id');
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -97,12 +104,19 @@ export default function Enrollments() {
     const [selectedEnrollment, setSelectedEnrollment] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Dropdown Menu
+    const [anchorEl, setAnchorEl] = useState(null);
+    const openMenu = Boolean(anchorEl);
+    const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
+    const handleMenuClose = () => setAnchorEl(null);
+
     const fetchEnrollments = async () => {
         try {
             setLoading(true);
             setError(null);
             const token = localStorage.getItem('token');
             if (!token) {
+                if (showNotification) showNotification('No authentication token found.', 'error');
                 throw new Error('No authentication token found.');
             }
 
@@ -115,14 +129,21 @@ export default function Enrollments() {
             });
 
             if (!response.ok) {
+                if (showNotification) showNotification('Failed to fetch enrollments data. Please check your network and authorization.', 'error');
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
             setEnrollments(data);
+            if (setEnrollmentCount) {
+                setEnrollmentCount(data.length);
+            }
         } catch (err) {
             console.error('Failed to fetch enrollments:', err);
             setError("Failed to fetch enrollments data. Please check your network and authorization.");
+            if (setEnrollmentCount) {
+                setEnrollmentCount(0);
+            }
         } finally {
             setLoading(false);
         }
@@ -147,11 +168,12 @@ export default function Enrollments() {
             });
 
             if (!response.ok) {
+                if (showNotification) showNotification('Failed to delete enrollment. Please try again.', 'error');
                 throw new Error('Failed to delete enrollment');
             }
 
-            setEnrollments(enrollments.filter(enrollment => enrollment.id !== enrollmentId));
-            console.log(`Enrollment with ID ${enrollmentId} deleted successfully.`);
+            await fetchEnrollments(); // Re-fetch all data to ensure consistency
+            if (showNotification) showNotification(`Enrollment with ID ${enrollmentId} deleted successfully.`, 'success');
         } catch (err) {
             console.error('Error deleting enrollment:', err);
             setError('Failed to delete enrollment. Please try again.');
@@ -179,6 +201,7 @@ export default function Enrollments() {
     const handleCloseFormModal = () => {
         setIsFormModalOpen(false);
         setSelectedEnrollment(null);
+        fetchEnrollments(); // Re-fetch data after form submission
     };
 
     const handleRequestSort = (property) => {
@@ -196,12 +219,8 @@ export default function Enrollments() {
         setPage(0);
     };
 
-    const getStatusText = (status) => {
-        const enrollmentStatusMap = {
-            0: 'Pending',
-            1: 'Active',
-            2: 'Completed',
-        };
+    const getStatusText = (enrollmentStatus, paymentStatus) => {
+        const enrollmentStatusMap = { 0: 'Pending', 1: 'Active' };
         const paymentStatusMap = {
             0: 'Pending',
             10: 'Failed',
@@ -210,7 +229,21 @@ export default function Enrollments() {
             40: 'Completed',
             50: 'Partially Paid',
         };
-        return `Enrollment: ${enrollmentStatusMap[status.enrollmentStatus] || 'N/A'}, Payment: ${paymentStatusMap[status.paymentStatus] || 'N/A'}`;
+        const enrollmentText = enrollmentStatusMap[enrollmentStatus] || 'N/A';
+        const paymentText = paymentStatusMap[paymentStatus] || 'N/A';
+        return `Enrollment: ${enrollmentText}, Payment: ${paymentText}`;
+    };
+
+    const descendingComparator = (a, b, orderBy) => {
+        if (b[orderBy] < a[orderBy]) return -1;
+        if (b[orderBy] > a[orderBy]) return 1;
+        return 0;
+    };
+
+    const getComparator = (order, orderBy) => {
+        return order === 'desc'
+            ? (a, b) => descendingComparator(a, b, orderBy)
+            : (a, b) => -descendingComparator(a, b, orderBy);
     };
 
     const stableSort = (array, comparator) => {
@@ -223,37 +256,71 @@ export default function Enrollments() {
         return stabilizedThis.map((el) => el[0]);
     };
 
-    const getComparator = (order, orderBy) => {
-        return order === 'desc'
-            ? (a, b) => descendingComparator(a, b, orderBy)
-            : (a, b) => -descendingComparator(a, b, orderBy);
-    };
-
-    const descendingComparator = (a, b, orderBy) => {
-        if (b[orderBy] < a[orderBy]) {
-            return -1;
-        }
-        if (b[orderBy] > a[orderBy]) {
-            return 1;
-        }
-        return 0;
-    };
-
     const filteredEnrollments = enrollments.filter((enrollment) => {
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
-        const enrollmentDateString = enrollment.enrollmentDate ? new Date(enrollment.enrollmentDate).toLocaleDateString() : '';
-        const statusString = getStatusText(enrollment);
-        return (
-            String(enrollment.id || '').toLowerCase().includes(lowerCaseSearchTerm) ||
-            (enrollment.userName || '').toLowerCase().includes(lowerCaseSearchTerm) ||
-            (enrollment.courseName || '').toLowerCase().includes(lowerCaseSearchTerm) ||
-            enrollmentDateString.includes(lowerCaseSearchTerm) ||
-            statusString.toLowerCase().includes(lowerCaseSearchTerm)
-        );
+        const searchableProperties = [
+            String(enrollment.id),
+            enrollment.userName,
+            enrollment.courseName,
+            new Date(enrollment.enrollmentDate).toLocaleDateString(),
+            getStatusText(enrollment.enrollmentStatus, enrollment.paymentStatus),
+        ];
+        return searchableProperties.some(prop => prop.toLowerCase().includes(lowerCaseSearchTerm));
     });
 
     const sortedAndFilteredEnrollments = stableSort(filteredEnrollments, getComparator(order, orderBy));
     const paginatedEnrollments = sortedAndFilteredEnrollments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+    // Export PDF
+    const handleExportPDF = async () => {
+        const { jsPDF } = await import("jspdf");
+        const doc = new jsPDF();
+        doc.text("Enrollments Report", 20, 20);
+        let y = 40;
+        filteredEnrollments.forEach((e, idx) => {
+            doc.text(`${idx + 1}. User: ${e.userName} | Course: ${e.courseName} | Status: ${getStatusText(e.enrollmentStatus, e.paymentStatus)}`, 20, y);
+            y += 10;
+        });
+        doc.save("enrollments-report.pdf");
+        handleMenuClose();
+    };
+
+    // Export Word
+    const handleExportWord = async () => {
+        const { Document, Packer, Paragraph, TextRun } = await import("docx");
+        const doc = new Document({
+            sections: [{
+                children: [
+                    new Paragraph({ children: [new TextRun({ text: "Enrollments Report", bold: true, size: 28 })] }),
+                    ...filteredEnrollments.map((e, idx) => new Paragraph(`${idx + 1}. User: ${e.userName} | Course: ${e.courseName} | Status: ${getStatusText(e.enrollmentStatus, e.paymentStatus)}`))
+                ]
+            }]
+        });
+        const blob = await Packer.toBlob(doc);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "enrollments-report.docx";
+        link.click();
+        handleMenuClose();
+    };
+
+    // Export Excel
+    const handleExportExcel = async () => {
+        const XLSX = await import("xlsx");
+        const ws = XLSX.utils.json_to_sheet(filteredEnrollments.map(e => ({
+            ID: e.id,
+            User: e.userName,
+            Course: e.courseName,
+            'Enrollment Date': new Date(e.enrollmentDate).toLocaleDateString(),
+            'Enrollment Status': e.enrollmentStatus,
+            'Payment Status': e.paymentStatus,
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Enrollments");
+        XLSX.writeFile(wb, "enrollments-report.xlsx");
+        handleMenuClose();
+    };
 
     if (loading) {
         return (
@@ -321,13 +388,29 @@ export default function Enrollments() {
                     <Typography variant="h5" sx={{ fontWeight: 600 }}>
                         Enrollments ({filteredEnrollments.length})
                     </Typography>
-                    <Button
-                        variant="contained"
-                        onClick={() => handleOpenFormModal('create')}
-                        startIcon={<AddCircleOutline />}
-                    >
-                        Add New Enrollment
-                    </Button>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Button
+                            variant="contained"
+                            endIcon={<MoreVert />}
+                            onClick={handleMenuClick}
+                        >
+                            Export
+                        </Button>
+                        <Menu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose}>
+                            <MenuItem onClick={() => { window.print(); handleMenuClose(); }}><ListItemIcon><Print /></ListItemIcon><ListItemText>Print</ListItemText></MenuItem>
+                            <MenuItem onClick={handleExportPDF}><ListItemIcon><PictureAsPdf /></ListItemIcon><ListItemText>PDF</ListItemText></MenuItem>
+                            <MenuItem onClick={handleExportWord}><ListItemIcon><Description /></ListItemIcon><ListItemText>Word</ListItemText></MenuItem>
+                            <MenuItem onClick={handleExportExcel}><ListItemIcon><TableChart /></ListItemIcon><ListItemText>Excel</ListItemText></MenuItem>
+                        </Menu>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleOpenFormModal('create')}
+                            startIcon={<AddCircleOutline />}
+                        >
+                            Add New Enrollment
+                        </Button>
+                    </Box>
                 </Box>
                 <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
                     <Table sx={{ minWidth: 650 }} aria-label="enrollments table">
@@ -359,7 +442,7 @@ export default function Enrollments() {
                                                     {orderBy === headCell.id ? (
                                                         order === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
                                                     ) : (
-                                                        <Box sx={{ width: 24, height: 24 }} /> // Placeholder for consistent alignment
+                                                        <Box sx={{ width: 24, height: 24 }} />
                                                     )}
                                                 </IconButton>
                                             )}
@@ -377,7 +460,7 @@ export default function Enrollments() {
                                         <TableCell>{enrollment.userName}</TableCell>
                                         <TableCell>{enrollment.courseName}</TableCell>
                                         <TableCell>{new Date(enrollment.enrollmentDate).toLocaleDateString()}</TableCell>
-                                        <TableCell>{getStatusText(enrollment)}</TableCell>
+                                        <TableCell>{getStatusText(enrollment.enrollmentStatus, enrollment.paymentStatus)}</TableCell>
                                         <TableCell sx={{ display: 'flex', gap: 1 }}>
                                             <Tooltip title="View Details">
                                                 <IconButton
@@ -442,7 +525,7 @@ export default function Enrollments() {
                 handleClose={handleCloseFormModal}
                 mode={modalMode}
                 enrollment={selectedEnrollment}
-                onFormSubmit={fetchEnrollments} // Pass the re-fetch function as a prop
+                onFormSubmit={fetchEnrollments}
             />
         </Container>
     );

@@ -10,6 +10,7 @@ import Courses from './pages/Courses/Courses';
 import CourseCategories from './pages/CourseCategories/CourseCategories'; // Placeholder
 import Enrollments from './pages/Enrollments/Enrollments'; // Placeholder
 import Users from './pages/Users/Users'; // Placeholder
+import './index.css';
 
 function App() {
   return (
@@ -41,3 +42,4 @@ function App() {
 }
 
 export default App;
+
