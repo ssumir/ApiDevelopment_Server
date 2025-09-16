@@ -3,7 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+<<<<<<< HEAD
   "homepage": "https://ssumir.github.io/ApiDevelopment_Server",
+=======
+  "homepage": "https://ssumir.github.io/ApiDevelopment_Server/",
+>>>>>>> 45677e9004ec122b3579da86e26a0921c76bd6f7
   "scripts": {
     "start": "vite",
     "dev": "vite",
