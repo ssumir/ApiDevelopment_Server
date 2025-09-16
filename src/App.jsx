@@ -16,7 +16,7 @@
 //     <Router>
 //       <Routes>
 //         {/* Public Routes */}
-//         <Route path="/" element={<Home />} />
+//         <Route path="/" element={<Login />} />
         
 //         {/* Auth Routes - Redirect if already authorized */}
 //         <Route element={<NotAuthorize />}>
